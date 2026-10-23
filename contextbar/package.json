@@ -1,0 +1,11 @@
+{
+  "name": "opencode-contextbar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Context usage bar above the input for the OpenCode TUI",
+  "exports": {
+    ".": "./index.ts",
+    "./tui": "./tui.tsx"
+  }
+}
