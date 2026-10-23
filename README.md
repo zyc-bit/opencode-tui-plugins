@@ -12,8 +12,15 @@ Requires OpenCode **v2.1.3+** (developed and verified against it).
 
 ## Install
 
-Clone, then copy a plugin directory into your project or global plugin folder
-(OpenCode discovers both automatically):
+One command each (adds to your global config):
+
+```sh
+opencode plugin add opencode-subagent-radar
+opencode plugin add opencode-contextbar
+```
+
+Or clone and copy a plugin directory into your project or global plugin
+folder (OpenCode discovers both automatically):
 
 ```sh
 git clone https://github.com/zyc-bit/opencode-tui-plugins.git
@@ -36,6 +43,9 @@ Alternatively reference the checkout directly in `opencode.json(c)`:
   ]
 }
 ```
+
+npm packages: [`opencode-subagent-radar`](https://www.npmjs.com/package/opencode-subagent-radar) ·
+[`opencode-contextbar`](https://www.npmjs.com/package/opencode-contextbar)
 
 No build step and no dependencies — OpenCode transpiles the sources at load
 time and hot-reloads on every edit.

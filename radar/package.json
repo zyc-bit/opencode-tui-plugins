@@ -1,10 +1,39 @@
 {
-  "name": "opencode-radar",
+  "name": "opencode-subagent-radar",
   "version": "0.1.0",
-  "private": true,
+  "description": "OpenCode TUI plugin: /radar panel monitoring a session's subagents as live cards (tokens, cost, tools, interrupt, notifications)",
   "type": "module",
-  "description": "Subagent radar panel for the OpenCode TUI (/radar)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zyc-bit/opencode-tui-plugins.git",
+    "directory": "radar"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "tui",
+    "subagent",
+    "monitor"
+  ],
   "exports": {
+    ".": "./index.ts",
     "./tui": "./tui.tsx"
+  },
+  "files": [
+    "index.ts",
+    "tui.tsx",
+    "model.ts",
+    "format.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@opencode/plugin": ">=2.1.3 <3"
+  },
+  "peerDependencies": {
+    "@opentui/core": ">=0.6.6",
+    "@opentui/solid": ">=0.6.6",
+    "solid-js": ">=1.9.0"
   }
 }
