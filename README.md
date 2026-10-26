@@ -77,8 +77,10 @@ companion server plugin (`session.hook("context")`) and converted with
 OpenCode's own chars/4 calibration; see
 [contextbar/README.md](./contextbar/README.md) and
 [docs/contextbar-design.md](./docs/contextbar-design.md) for the architecture
-notes, including a v2.1.3 quirk where HTTP RPC method calls can't see plugin
-registrations (events work fine).
+notes, including how RPC method calls are location-scoped (pass
+`?location[directory]=<project>` or the `x-opencode-directory` header; see
+[opencode#58438](https://github.com/anomalyco/opencode/issues/58438)) and why
+this plugin ships an events-only transport instead.
 
 ## Development
 

@@ -5,13 +5,18 @@
 
 ## 实现期间的关键发现（推翻了原设计的一部分）
 
-**HTTP RPC 方法调用在 v2.1.3 不可用于插件注册**：`POST /api/rpc/{id}/{method}`
-始终返回 `rpc.unavailable`——即使逐字复刻官方文档示例也一样（插件注册表与
-HTTP 端点的 Rpc 服务实例隔离；二进制反编译确认注册表按 id 全局查找、挂在
-scope 上，HTTP 路径用了不同实例）。**但 RPC 事件正常**：`registration.events.emit`
-发布的事件以 `rpc.<id>.<event>` 类型流入公共事件流（SSE 实测验证）。
-→ 最终架构：**事件推送**（`measured` 每次模型调用 + `snapshot` 5s 心跳），
-TUI 用 `data.on("rpc.contextbar.*")` 接收，零 HTTP 轮询。
+**HTTP RPC 方法调用是 location 作用域的**（官方 issue
+[anomalyco/opencode#58438](https://github.com/anomalyco/opencode/issues/58438)
+确认，非 bug）：不带 location 的请求回退到**服务进程工作目录**——那里没有
+加载项目插件 → `rpc.unavailable`。正确姿势：`?location[directory]=<项目路径>`
+或 `x-opencode-directory` 头或 `client.rpc(...).method(input, { location })`；
+body 还需 `{"input": {...}}` 包装。官方文档示例均未传 location（上游已在修文档）。
+注意本机 `opencode api --param "location[directory]=..."` 的方括号参数不会
+正确序列化——测试时用 URL 查询串或请求头。
+**RPC 事件跨 location 广播**（`registration.events.emit` → 公共事件流，
+SSE 实测验证）。→ 最终架构：**事件推送**（`measured` 每次模型调用 +
+`snapshot` 5s 心跳），TUI 用 `data.on("rpc.contextbar.*")` 接收，零 HTTP 轮询
+（广播型消费场景事件比方法调用更合适，且免 location 传递）。
 
 ## 最终架构
 

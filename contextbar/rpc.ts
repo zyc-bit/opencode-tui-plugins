@@ -1,11 +1,12 @@
 // Shared RPC contract between the contextbar server plugin (measurement
 // producer) and the TUI plugin (consumer).
 //
-// Transport note (verified on v2.1.3): HTTP RPC method calls
-// (POST /api/rpc/{id}/{method}) cannot see plugin registrations, but RPC
-// events flow through the public event stream as `rpc.<id>.<event>` — so this
-// contract is events-only. `snapshot` (heartbeat) covers TUI restarts; events
-// are live-only, so the TUI cannot replay them itself.
+// Transport note: RPC method calls are location-scoped (a request without an
+// explicit location falls back to the server's cwd, where project plugins are
+// not loaded — see anomalyco/opencode#58438). RPC events broadcast across
+// locations as `rpc.<id>.<event>`, which suits this consumer — so the contract
+// is events-only. `snapshot` (heartbeat) covers TUI restarts; events are
+// live-only, so the TUI cannot replay them itself.
 
 import { Rpc } from "@opencode/plugin/rpc"
 

@@ -42,9 +42,16 @@ server's compaction decisions.
 - `tui.tsx` (client): subscribes to the events via `data.on`, reads messages /
   model window / skills from the reactive data layer, renders the bar.
 
-> Verified on v2.1.3: HTTP RPC method calls (`POST /api/rpc/{id}/{method}`)
-> cannot see plugin registrations, but RPC **events** flow through the public
-> event stream — hence events, not method polling.
+> RPC method calls are location-scoped by design: a request without an
+> explicit `location` falls back to the server process's working directory,
+> where project plugins are not loaded (`rpc.unavailable`). Calls must pass
+> `?location[directory]=<project>`, the `x-opencode-directory` header, or
+> `client.rpc(Contract).method(input, { location })` — the RPC guide's
+> examples omitted this (upstream docs patch pending, see
+> [opencode#58438](https://github.com/anomalyco/opencode/issues/58438)).
+> This plugin uses events instead because they broadcast across locations,
+> which suits a broadcast-style consumer — and it avoids the live-only
+> bootstrap problem with a 5 s snapshot heartbeat.
 
 ## Files
 

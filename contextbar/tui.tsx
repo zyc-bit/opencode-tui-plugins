@@ -100,7 +100,8 @@ function ContextBar(props: { sessionID: string }) {
 
   // Measurements arrive as RPC events through the public event stream
   // (`rpc.contextbar.measured` per model call, `.snapshot` heartbeat for
-  // late joiners). HTTP RPC method calls are unavailable on this build.
+  // late joiners). Events broadcast across locations, unlike method calls,
+  // which are location-scoped (anomalyco/opencode#58438).
   createEffect(() => {
     const stopMeasured = ctx.data.on("rpc.contextbar.measured", (event) => {
       const m = event?.data as Measurement | undefined
