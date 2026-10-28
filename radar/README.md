@@ -2,7 +2,8 @@
 
 A CLI plugin panel for OpenCode v2 that tracks the subagents (child sessions)
 spawned by the current session. Open it with the `/radar` slash command or from
-the command palette ("Radar: subagent monitor").
+the command palette ("Radar: subagent monitor"). By default it also opens
+automatically the first time you enter each session.
 
 ## Features
 
@@ -47,6 +48,7 @@ and sends a system notification while the terminal is blurred.
 
 - `/radar notify off` — disable completion notifications
 - `/radar sound on` — also play a sound (`subagent_done` / `error`)
+- `/radar auto off` — stop opening the panel automatically when entering a session
 - `/radar status` — show current settings
 
 Preferences persist across restarts (durable storage, live-synced between TUI

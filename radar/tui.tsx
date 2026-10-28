@@ -71,6 +71,7 @@ type SyncableSession = RadarData["session"] & {
 interface RadarPrefs {
   notify: boolean
   sound: boolean
+  autoOpen?: boolean
 }
 
 interface TuiContext {
@@ -86,7 +87,13 @@ interface TuiContext {
   readonly theme: any
   readonly keymap: { layer(factory: () => Record<string, unknown>): void }
   readonly ui: {
-    readonly panel: { open(name: string, options?: { presentation?: string }): boolean }
+    readonly panel: {
+      open(name: string, options?: { presentation?: string }): boolean
+      current(): { readonly name: string; readonly sessionID: string } | undefined
+    }
+    readonly router: {
+      current(): { readonly type: string; readonly sessionID?: string }
+    }
     readonly tabs: { enabled(): boolean; focus(sessionID: string): boolean }
     readonly toast: {
       show(options: { message: string; title?: string; sessionID?: string; variant?: string }): void
@@ -286,22 +293,51 @@ function handleRadarArgs(input: string) {
   const parts = input.trim().split(/\s+/)
   const verb = parts[0]?.toLowerCase()
   const value = parts[1]?.toLowerCase()
-  const apply = (key: "notify" | "sound", on: boolean) => {
+  const apply = (key: "notify" | "sound" | "autoOpen", on: boolean) => {
     void updatePrefs?.((draft) => {
       draft[key] = on
     })
-    ctx.ui.toast.show({ title: "Radar", message: `${key} ${on ? "on" : "off"}`, variant: "success" })
+    const label = key === "autoOpen" ? "auto-open" : key
+    ctx.ui.toast.show({ title: "Radar", message: `${label} ${on ? "on" : "off"}`, variant: "success" })
   }
   if (verb === "notify") return apply("notify", value !== "off")
   if (verb === "sound") return apply("sound", value !== "off")
+  if (verb === "auto") return apply("autoOpen", value !== "off")
   if (verb === "status") {
     ctx.ui.toast.show({
       title: "Radar",
-      message: `notify ${prefs?.notify ? "on" : "off"} · sound ${prefs?.sound ? "on" : "off"}`,
+      message: `notify ${prefs?.notify ? "on" : "off"} · sound ${prefs?.sound ? "on" : "off"} · auto-open ${prefs?.autoOpen !== false ? "on" : "off"}`,
     })
     return
   }
-  ctx.ui.toast.show({ title: "Radar", message: "usage: /radar [notify|sound] [on|off] · /radar status" })
+  ctx.ui.toast.show({ title: "Radar", message: "usage: /radar [notify|sound|auto] [on|off] · /radar status" })
+}
+
+// ---------------------------------------------------------------------------
+// Auto-open on session entry
+// ---------------------------------------------------------------------------
+
+/** Sessions already auto-opened this TUI run, so a manual close sticks. */
+const autoOpened = new Set<string>()
+
+function AutoOpen() {
+  const ctx = context!
+  createEffect(() => {
+    const route = ctx.ui.router.current()
+    if (route.type !== "session" || !route.sessionID) return
+    if (prefs?.autoOpen === false) return
+    const sessionID = route.sessionID
+    if (autoOpened.has(sessionID)) return
+    autoOpened.add(sessionID)
+    // Defer until the session view has mounted its panel host.
+    setTimeout(() => {
+      const current = context?.ui.router.current()
+      if (current?.type !== "session" || current.sessionID !== sessionID) return
+      if (context?.ui.panel.current()?.name === PANEL_NAME) return
+      context?.ui.panel.open(PANEL_NAME)
+    }, 0)
+  })
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -799,9 +835,15 @@ export default Plugin.define({
       render: (panel: PanelInput) => <RadarGate panel={panel} />,
     })
 
+    const releaseAutoOpen = context.ui.slot({
+      append: "app",
+      render: () => <AutoOpen />,
+    })
+
     return () => {
       stopEvents?.()
       releasePanel?.()
+      releaseAutoOpen?.()
       pendingPermissions.clear()
       ghosts.clear()
       notified.clear()
