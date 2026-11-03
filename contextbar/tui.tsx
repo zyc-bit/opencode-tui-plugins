@@ -2,7 +2,7 @@
 // contextbar TUI plugin: renders a context-usage progress bar above the input
 // box (session.composer.top). Exact data comes from the reactive data layer
 // (messages tokens, model window, autocompact buffer); system/tools/instructions
-// chars come from the companion server plugin via polled RPC.
+// chars come from the companion server plugin via RPC events.
 
 import { Plugin } from "@opencode/plugin/tui"
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js"
@@ -13,6 +13,7 @@ import {
   formatPercent,
   formatTokens,
   layoutBar,
+  mergeMeasurements,
   pickReference,
   planBar,
   usageTotal,
@@ -106,16 +107,12 @@ function ContextBar(props: { sessionID: string }) {
     const stopMeasured = ctx.data.on("rpc.contextbar.measured", (event) => {
       const m = event?.data as Measurement | undefined
       if (!m?.sessionID) return
-      setMeasurements((prev) => new Map(prev).set(m.sessionID, m))
+      setMeasurements((prev) => mergeMeasurements(prev, [m]))
     })
     const stopSnapshot = ctx.data.on("rpc.contextbar.snapshot", (event) => {
-      const payload = event?.data as { measurements?: Measurement[] } | undefined
-      if (!Array.isArray(payload?.measurements)) return
-      const next = new Map<string, Measurement>()
-      for (const m of payload.measurements) {
-        if (m?.sessionID) next.set(m.sessionID, m)
-      }
-      setMeasurements(next)
+      const incoming = (event?.data as { measurements?: Measurement[] } | undefined)?.measurements
+      if (!Array.isArray(incoming)) return
+      setMeasurements((prev) => mergeMeasurements(prev, incoming))
     })
     onCleanup(() => {
       stopMeasured()

@@ -42,6 +42,11 @@ server's compaction decisions.
 - `tui.tsx` (client): subscribes to the events via `data.on`, reads messages /
   model window / skills from the reactive data layer, renders the bar.
 
+Snapshots contain only the emitting location's measurements. The TUI merges
+them by session ID and keeps the newest measurement timestamp; a snapshot
+from another project never clears the current session's segments. Unchanged
+heartbeats do not trigger a redraw.
+
 > RPC method calls are location-scoped by design: a request without an
 > explicit `location` falls back to the server process's working directory,
 > where project plugins are not loaded (`rpc.unavailable`). Calls must pass
@@ -62,3 +67,14 @@ server's compaction decisions.
 
 No configuration; the bar appears above the input once a session has context
 data.
+
+## Develop
+
+```sh
+npm install
+npm run typecheck
+npm test
+```
+
+Tests use Node.js 22.18+ and cover cross-location snapshots, out-of-order
+measurements, and unchanged heartbeats.

@@ -1,5 +1,29 @@
-// Pure logic for the contextbar: reference-message selection (official
-// context-usage formula), usage sums, config parsing, and bar layout.
+// Pure logic for the contextbar: measurement merging, reference-message
+// selection (official context-usage formula), usage sums, config parsing,
+// and bar layout.
+
+import type { Measurement } from "./rpc"
+
+/**
+ * RPC snapshots contain only one location's cached sessions, not every session
+ * on the server. Merge them without dropping other locations' measurements,
+ * and keep the latest model call when events arrive out of order.
+ */
+export function mergeMeasurements(
+  previous: Map<string, Measurement>,
+  incoming: readonly Measurement[],
+): Map<string, Measurement> {
+  let next = previous
+  for (const measurement of incoming) {
+    if (!measurement?.sessionID || !Number.isFinite(measurement.at)) continue
+    const current = next.get(measurement.sessionID)
+    if (current && current.at >= measurement.at) continue
+    // Unchanged heartbeats keep the signal's identity and do not redraw the bar.
+    if (next === previous) next = new Map(previous)
+    next.set(measurement.sessionID, measurement)
+  }
+  return next
+}
 
 export interface TokenUsageLike {
   input?: number
